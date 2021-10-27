@@ -1,0 +1,2 @@
+class Actif():
+    pass
