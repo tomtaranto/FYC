@@ -1,9 +1,9 @@
-from typing import Dict
+from typing import Dict, Tuple
 
 
 class Actif():
     # history = [date : [buyer : (quantity, price)]]
-    def __init__(self, name: str, quantity: float, price: float, history: Dict[str, Dict[str, (float, float)]]):
+    def __init__(self, name: str, quantity: float, price: float, history: Dict[str, Dict[str, Tuple[float, float]]]):
         self.name = name
         self.quantity = quantity
         self.price = price
@@ -15,9 +15,9 @@ class Actif():
     # Achat avec quantity positif
     # Vente avec quantity negatif
     # Obligatoirement appeller can_buy() avant d'appeller cette fonction
-    def update(self, quantity: float, date: str, buyer: str)->None:
+    def update(self, quantity: float, date: str, buyer: str) -> None:
         self.quantity -= quantity
-        self.history[date[buyer]] = (quantity, self.price)
+        self.history[date][buyer] = (quantity, self.price)
 
     def set_price(self, price: float) -> None:
         self.price = price

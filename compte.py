@@ -7,19 +7,19 @@ class Compte():
         self.obligation = dict()  # nom_actif : quantité, prix date execution, date achat
         self.grecques = None
 
-    def get_credit(self):
+    def get_credit(self) -> float:
         return self.credit
 
-    def add_credit(self, credit):
+    def add_credit(self, credit) -> None:
         self.credit += credit
 
-    def lose_credit(self, credit):
+    def lose_credit(self, credit) -> None:
         self.credit -= credit
 
-    def get_date_creation(self):
+    def get_date_creation(self) -> int:
         return self.date_creation
 
-    def get_actifs(self):
+    def get_actifs(self) -> dict:
         return self.actifs
 
     # On ajoute un actif (on achete une 'quantite' d'actif 'nom' au prix 'prix' à la date 'date'
@@ -32,36 +32,37 @@ class Compte():
 
         # si la date de l'achat de l'actif est déjà une clé dans le dict
         if date in self.historique:
-            self.historique[date].append(-(prix*quantite))  # on met dans l'historique l'achat effectuer
-            self.lose_credit(prix*quantite)                 # on met à jour nos crédits
+            self.historique[date].append(-(prix * quantite))  # on met dans l'historique l'achat effectuer
+            self.lose_credit(prix * quantite)  # on met à jour nos crédits
         else:
             self.historique[date] = []
-            self.historique[date].append(-(prix*quantite))
+            self.historique[date].append(-(prix * quantite))
             self.lose_credit(prix * quantite)
 
-    def sell_actif(self, nom: str, quantite: int, prix: float, date: int):
+    def sell_actif(self, nom: str, quantite: int, prix: float, date: int) -> None:
         if nom in self.actifs:
             if quantite <= self.actifs[nom]:
                 self.actifs[nom] -= quantite
                 # si la date de l'achat de l'actif est déjà une clé dans le dict
                 if date in self.historique:
-                    self.historique[date].append(prix*quantite)  # on met dans l'historique la vente effectuer
-                    self.add_credit(prix * quantite)             # on met à jour nos crédits
+                    self.historique[date].append(prix * quantite)  # on met dans l'historique la vente effectuer
+                    self.add_credit(prix * quantite)  # on met à jour nos crédits
                 else:
                     self.historique[date] = []
-                    self.historique[date].append(prix*quantite)
+                    self.historique[date].append(prix * quantite)
                     self.add_credit(prix * quantite)
             else:
-                print("ERROR, tu possèdes "+str(self.actifs[nom])+" actions "+str(nom)+" mais tu veux vendre "+str(quantite)+" actions.")
+                print("ERROR, tu possèdes " + str(self.actifs[nom]) + " actions " + str(
+                    nom) + " mais tu veux vendre " + str(quantite) + " actions.")
 
         else:
-            print("Tu ne possèdes pas d'actif :",nom)
+            print("Tu ne possèdes pas d'actif :", nom)
 
-    def get_historique(self):
+    def get_historique(self) -> dict:
         return self.historique
 
     # On ajoute une obligation
-    def add_obligation(self, date_achat: int, nom: str, quantite: int, prix: float, date_execution: int):
+    def add_obligation(self, date_achat: int, nom: str, quantite: int, prix: float, date_execution: int) -> None:
         # si le nom est deja une clé du dict
         if nom in self.obligation:
             self.historique[nom].append([quantite, prix, date_achat, date_execution])
@@ -69,9 +70,8 @@ class Compte():
             self.historique[nom] = []
             self.historique[nom].append([quantite, prix, date_achat, date_execution])
 
-
-    def get_obligation(self):
+    def get_obligation(self) -> dict:
         return self.obligation
 
-    def get_grecques(self):
+    def get_grecques(self) -> dict:
         return self.grecques
