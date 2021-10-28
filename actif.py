@@ -24,7 +24,7 @@ class Actif():
 
     # Obligatoirement appeller cette fonction avant d'appeller update
     def can_buy(self, quantity: float) -> bool:
-        if self.quantity > quantity:
+        if self.quantity >= quantity:
             return True
         return False
 
