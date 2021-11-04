@@ -1,4 +1,5 @@
 from typing import Dict, Tuple
+import pandas as pd
 
 
 class Actif():
@@ -8,6 +9,8 @@ class Actif():
         self.quantity = quantity
         self.price = price
         self.history = history
+        self.real_data = None
+        self.load('shib-usd-max.csv')  # TODO mettre le nom en parametre si on a plusieurs actifs
 
     def get_price(self) -> float:
         return self.price
@@ -29,5 +32,25 @@ class Actif():
         return False
 
     # Populate history with data
-    def load(self):
-        pass
+    def load(self, filepath):
+        df = pd.read_csv(filepath)
+        df = df[df.market_cap != 0.0].reset_index(drop=True)
+        self.real_data = df
+
+    # Update price and quantity with today's data
+    def update_from_date(self, date: int):
+        self.quantity = self.quantity + self.real_data.iloc[date].total_volume - self.real_data.iloc[
+            date - 1].total_volume
+        self.price = float(self.real_data.iloc[date].market_cap / self.real_data.iloc[date].total_volume)
+
+
+
+def main():
+    a = Actif('Shiba', 2255990535.605459, 7827138285.646066/2255990535.605459, dict())
+    print(a.price, a.quantity, a.history, a.real_data)
+    for i in range(1,160):
+        a.update_from_date(i)
+    print(a.price, a.quantity, a.history)
+
+if __name__ == '__main__':
+    main()
