@@ -8,11 +8,12 @@ def exo1():
     # On creer notre marche ainsi qu'une strategie simple
     marche = init_marche_un_actif()
     strategie = Strategie()
+    strategie.add_strat(strategie.first_strat)
     marche.next_day()
     # On fait avancer le marche de plusieurs jours
     # TODO automatiser cela via une fonction
     for time in range(1,20):
-        strategie.first_strat(marche.current_time, marche.actifs[0], marche.agents[0])
+        strategie.strat[0](marche.current_time, marche.actifs[0], marche.agents[0])
         marche.next_day()
 
     print(marche.agents[0].compte.historique)

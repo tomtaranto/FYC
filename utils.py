@@ -2,7 +2,13 @@ from marche import Marche
 
 
 class Solveur():
-    pass
+    def __init__(self, marche:Marche):
+        self.marche = marche
+
+    def end_day(self):
+        for agent in self.marche.agents:
+            for strategie in agent.strategies:
+
 
 # FOnction pour creer un marche avec un actif et un agent qui s'appelle EDDY
 def init_marche_un_actif():
