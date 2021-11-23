@@ -22,11 +22,34 @@ class Agent:
         if day % 3 == 0:
             self.compte.sell_actif(actif.name, 1, actif.price, day)
         else:
-            self.compte.add_actif(actif.name, 1, actif.price, day)
+            self.compte.buy_actif(actif.name, 1, actif.price, day)
+
+
+    def second_strat(self, date: int, actif: Actif):
+        total = 0
+        count = 0
+        for i in range(1, 6):
+            try:
+                total += actif.price_history[date-i]
+                count += 1
+            except:
+                pass
+        try:
+            moyenne_mobile = total / count
+        except:
+            moyenne_mobile = actif.price
+        if moyenne_mobile > actif.price:
+            self.compte.buy_actif(actif.name, 1, actif.price, date)
+        else:
+            self.compte.sell_actif(actif.name, 1, actif.price, date)
+
+
+
 
     def plot_compte(self):
         x = np.linspace(1, len(self.compte.historique)+1, len(self.compte.historique)+1)
         y = self.compte.historique_credit.values()
         plt.plot(x,y,marker='o')
+        #todo faire de jolie plot, afficher ACHAT OU VENTE
         plt.show()
 

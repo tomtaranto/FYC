@@ -22,7 +22,7 @@ class Compte():
         return self.actifs
 
     # On ajoute un actif (on achete une 'quantite' d'actif 'nom' au prix unitaire 'prix' à la date 'date')
-    def add_actif(self, nom: str, quantite: int, prix: float, date: int):
+    def buy_actif(self, nom: str, quantite: int, prix: float, date: int):
         # si le nom est déjà une clé du dict
         if nom in self.actifs:
             self.actifs[nom] += quantite

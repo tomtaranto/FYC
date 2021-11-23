@@ -9,6 +9,7 @@ class Actif():
         self.quantity = quantity
         self.price = price
         self.history = history
+        self.price_history = dict()  # date : prix
         self.real_data = None
         self.load('shib-usd-max.csv')  # TODO mettre le nom en parametre si on a plusieurs actifs
 
@@ -42,6 +43,7 @@ class Actif():
         self.quantity = self.quantity + self.real_data.iloc[date].total_volume - self.real_data.iloc[
             date - 1].total_volume
         self.price = float(self.real_data.iloc[date].market_cap / self.real_data.iloc[date].total_volume)
+        self.price_history[date] = self.price
 
 
 
