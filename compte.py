@@ -4,6 +4,7 @@ class Compte():
         self.date_creation = date_creation
         self.actifs = dict()  # nom_actif : quantité
         self.historique = dict()  # date : nom_actif : quantite, prix
+        self.historique_credit = {date_creation: credit}  # date : credit
         self.obligation = dict()  # nom_actif : quantité, prix, date execution, date achat
         self.historique_obligation = dict()  # date achat : nom_actif : list(quantite, prix, date execution)
         self.grecques = None
@@ -37,6 +38,9 @@ class Compte():
 
         self.change_credit(-(prix * quantite))
 
+        self.historique_credit[date] = self.credit
+
+
     # On supprime un actif (on vend une 'quantite' d'actif 'nom' au prix unitaire 'prix' à la date 'date')
     # quantite > 0
     def sell_actif(self, nom: str, quantite: int, prix: float, date: int) -> None:
@@ -51,6 +55,7 @@ class Compte():
             self.historique[date][nom] = [-quantite, prix]
 
         self.change_credit(prix * quantite)
+        self.historique_credit[date] = self.credit
 
     # APPELEZ OBLIGATOIREMENT POUR CHAQUE ACHAT (check si on peut acheter)
     def can_buy(self, prix: float, quantite: int):

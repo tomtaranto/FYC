@@ -15,6 +15,9 @@ class Solveur():
     def end_day(self):
         for agent in self.marche.agents:
             for strategie in agent.strategies:
+                return #todo
+
+
 
 
 
@@ -62,4 +65,4 @@ def model_dense():
 
 
 
-create_model('toto', 'test')
+# create_model('toto', 'test')
