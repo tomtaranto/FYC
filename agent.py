@@ -4,6 +4,7 @@ from actif import Actif
 from compte import Compte
 import matplotlib.pyplot as plt
 
+
 class Agent:
     def __init__(self, name: str, agent_type: str, start_credit: float):
         assert agent_type in ["human", "bot"]
@@ -19,18 +20,17 @@ class Agent:
 
     # Strategie attendue pour l'exercice 1
     def first_strat(self, day: int, actif: Actif):
-        if day % 3 == 0:
+        if day % 3 == 0 and self.compte.can_sell(actif.name, 1):
             self.compte.sell_actif(actif.name, 1, actif.price, day)
-        else:
+        elif self.compte.can_buy(actif.price, 1):
             self.compte.buy_actif(actif.name, 1, actif.price, day)
-
 
     def second_strat(self, date: int, actif: Actif):
         total = 0
         count = 0
         for i in range(1, 6):
             try:
-                total += actif.price_history[date-i]
+                total += actif.price_history[date - i]
                 count += 1
             except:
                 pass
@@ -38,18 +38,51 @@ class Agent:
             moyenne_mobile = total / count
         except:
             moyenne_mobile = actif.price
-        if moyenne_mobile > actif.price:
+        if moyenne_mobile > actif.price and self.compte.can_buy(actif.price, 1):
             self.compte.buy_actif(actif.name, 1, actif.price, date)
-        else:
+        elif self.compte.can_sell(actif.name, 1):
             self.compte.sell_actif(actif.name, 1, actif.price, date)
-
-
-
+        else:  # Au lieu de ne rien faire on achete
+            if self.compte.can_buy(actif.price, 1):
+                self.compte.buy_actif(actif.name, 1, actif.price, date)
 
     def plot_compte(self):
-        x = np.linspace(1, len(self.compte.historique)+1, len(self.compte.historique)+1)
-        y = self.compte.historique_credit.values()
-        plt.plot(x,y,marker='o')
-        #todo faire de jolie plot, afficher ACHAT OU VENTE
+        x = list(range(min(self.compte.historique), max(self.compte.historique)+1))
+        # x = np.linspace(1, len(self.compte.historique)+1, len(self.compte.historique)+1)
+        y = np.zeros_like(x)
+        y1 = np.zeros_like(x)
+        c = np.empty_like(x, dtype=str)
+        for i, date in enumerate(x):
+            try:
+                y[i] = self.compte.historique_credit[date]
+            except:
+                pass
+            if date in self.compte.historique:
+                for actif in self.compte.historique[date].keys():
+                    try:
+                        y1[i] += self.compte.historique[date][actif][0]  # * self.compte.historique[date][actif][1]
+                    except:
+                        pass
+            if y1[i] > 0:
+                c[i] = 'green'
+            elif y1[i] < 0:
+                c[i] = 'red'
+            else:
+                c[i] = 'yellow'
+        # y = self.compte.historique_credit.values()
+        fig, ax1 = plt.subplots()
+        color = 'blue'
+        ax1.set_xlabel('jours')
+        ax1.set_ylabel('euros', color=color)
+        ax1.tick_params(axis='y', labelcolor=color)
+        ax1.plot(x, y, color=color, label = 'portefeuille')
+        ax2 = ax1.twinx()
+        # color = 'orange'
+        ax2.set_ylabel('vente')
+        ax2.tick_params(axis='y')
+        ax2.scatter(x, y1, marker='x', c=c, label='achats/ventes')
+        fig.tight_layout()
+        # todo faire de jolie plot, afficher ACHAT OU VENTE
+        ax2.legend()
+        ax1.legend()
         plt.show()
-

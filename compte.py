@@ -59,7 +59,7 @@ class Compte():
 
     # APPELEZ OBLIGATOIREMENT POUR CHAQUE ACHAT (check si on peut acheter)
     def can_buy(self, prix: float, quantite: int):
-        return self.get_credit() >= (prix * quantite)
+        return abs(self.get_credit()) >= abs(prix * quantite)
 
     # APPELEZ OBLIGATOIREMENT POUR CHAQUE VENTE (check si on peut vendre)
     def can_sell(self, nom: str, quantite: int):

@@ -29,7 +29,8 @@ def exo1():
         marche.agents[0].strat[0](marche.current_time, marche.actifs[0])
         marche.next_day()
     print(marche.agents[0].compte.historique)
-    marche.agents[0].compte.sell_actif('Shiba', marche.agents[0].compte.actifs['Shiba'], marche.actifs[0].price,  marche.current_time)
+    name = next(iter(marche.agents[0].compte.actifs))
+    marche.agents[0].compte.sell_actif(name, marche.agents[0].compte.actifs[name], marche.actifs[0].price, marche.current_time)
     marche.agents[0].plot_compte()
 
 def exo2():
@@ -42,7 +43,7 @@ def exo2():
         marche.agents[0].strat[0](marche.current_time, marche.actifs[0])
         marche.next_day()
     print(marche.agents[0].compte.historique)
-    marche.agents[0].compte.sell_actif('Shiba', marche.agents[0].compte.actifs['Shiba'], marche.actifs[0].price,
+    marche.agents[0].compte.sell_actif(marche.actifs[0].name, marche.agents[0].compte.actifs[marche.actifs[0].name], marche.actifs[0].price,
                                        marche.current_time)
     marche.agents[0].plot_compte()
     return
