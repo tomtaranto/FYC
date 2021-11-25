@@ -5,7 +5,7 @@ class Compte():
         self.actifs = dict()  # nom_actif : quantité
         self.historique = dict()  # date : nom_actif : quantite, prix
         self.historique_credit = {date_creation: credit}  # date : credit
-        self.obligation = dict()  # nom_actif : quantité, prix, date execution, date achat
+        self.obligation = dict()  # nom_actif : list(quantité, prix, date execution, date achat)
         self.historique_obligation = dict()  # date achat : nom_actif : list(quantite, prix, date execution)
         self.grecques = None
 
@@ -39,7 +39,6 @@ class Compte():
         self.change_credit(-(prix * quantite))
 
         self.historique_credit[date] = self.credit
-
 
     # On supprime un actif (on vend une 'quantite' d'actif 'nom' au prix unitaire 'prix' à la date 'date')
     # quantite > 0
@@ -90,9 +89,27 @@ class Compte():
             self.historique_obligation[date_achat] = dict()
             self.historique_obligation[date_achat][nom] = []
             self.historique_obligation[date_achat][nom].append([quantite, prix, date_execution])
+        # TODO Calculer le prix de l obligation et l'enlever du credit
 
     def get_obligation(self) -> dict:
         return self.obligation
 
     def get_grecques(self) -> dict:
         return self.grecques
+
+    def resolve_obligation(self, current_date: int):
+        # nom_actif : [quantité, prix, date execution, date achat]
+        for actif_name in self.obligation:
+            for i in range(len(self.obligation[actif_name])):
+                print(self.actifs)
+                if self.obligation[actif_name][i][2] == current_date:  # SI la date d'execution est la date du jour
+                    print(self.obligation[actif_name][i])
+                    if self.obligation[actif_name][i][0] > 0:  # Si c'est un ordre d'achat
+                        self.buy_actif(actif_name, self.obligation[actif_name][i][0], self.obligation[actif_name][i][1],
+                                       current_date)
+                    else:
+                        print("selling", actif_name, -self.obligation[actif_name][i][0],
+                              self.obligation[actif_name][i][1], current_date)
+                        self.sell_actif(actif_name, -self.obligation[actif_name][i][0],
+                                        self.obligation[actif_name][i][1], current_date)
+        return
