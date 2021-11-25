@@ -1,5 +1,6 @@
 from typing import Dict, Tuple
 import pandas as pd
+import numpy as np
 
 
 class Actif():
@@ -11,7 +12,13 @@ class Actif():
         self.history = history
         self.price_history = dict()  # date : prix
         self.real_data = None
-        self.load('shib-usd-max.csv')  # TODO mettre le nom en parametre si on a plusieurs actifs
+        self.volatility = 0
+        if 'shib' in name.lower():
+            self.load('shib-usd-max.csv')  # TODO mettre le nom en parametre si on a plusieurs actifs
+        else:
+            print()
+            self.load('lvmh.csv')
+
 
     def get_price(self) -> float:
         return self.price
@@ -35,15 +42,21 @@ class Actif():
     # Populate history with data
     def load(self, filepath):
         df = pd.read_csv(filepath)
-        df = df[df.market_cap != 0.0].reset_index(drop=True)
+        if 'shib' in filepath:
+            df = df[df.market_cap != 0.0].reset_index(drop=True)
         self.real_data = df
 
     # Update price and quantity with today's data
     def update_from_date(self, date: int):
-        self.quantity = self.quantity + self.real_data.iloc[date].total_volume - self.real_data.iloc[
-            date - 1].total_volume
-        self.price = float(self.real_data.iloc[date].market_cap / self.real_data.iloc[date].total_volume)
+        if 'shib' in self.name.lower():
+            self.quantity = self.quantity + self.real_data.iloc[date].total_volume - self.real_data.iloc[
+                date - 1].total_volume
+            self.price = float(self.real_data.iloc[date].market_cap / self.real_data.iloc[date].total_volume)
+        else:
+            self.quantity = 505000000
+            self.price = self.real_data.loc[self.real_data.index[date+1], 'Close'] # TODO FIx IT EDDY !
         self.price_history[date] = self.price
+        self.volatility = np.std(list(self.price_history.values()))
 
 
 

@@ -1,3 +1,9 @@
+from scipy.integrate import quad
+import numpy as np
+
+from actif import Actif
+
+
 class Compte():
     def __init__(self, credit: float, date_creation: int):
         self.credit = credit
@@ -71,8 +77,9 @@ class Compte():
         return self.historique
 
     # On ajoute une obligation
-    def add_obligation(self, date_achat: int, nom: str, quantite: int, prix: float, date_execution: int) -> None:
+    def add_obligation(self, date_achat: int, actif: Actif, quantite: int, prix: float, date_execution: int) -> None:
         # si le nom est deja une clé du dict
+        nom = actif.name
         if nom in self.obligation:
             self.obligation[nom].append([quantite, prix, date_achat, date_execution])
         else:
@@ -90,6 +97,14 @@ class Compte():
             self.historique_obligation[date_achat][nom] = []
             self.historique_obligation[date_achat][nom].append([quantite, prix, date_execution])
         # TODO Calculer le prix de l obligation et l'enlever du credit
+        if quantite >0: # Option achat/Call
+            price : float = max(0.0, actif.price - prix)
+        else: # Option de vente / Put
+            price = self.compute_price_obligation(actif.price, date_execution, prix, 0.0, actif.volatility,date_achat)
+        self.change_credit(-abs(price))
+        print("price : ", price, " volatility : ", actif.volatility)
+        self.historique_credit[date_achat] = self.credit
+        return
 
     def get_obligation(self) -> dict:
         return self.obligation
@@ -101,15 +116,33 @@ class Compte():
         # nom_actif : [quantité, prix, date execution, date achat]
         for actif_name in self.obligation:
             for i in range(len(self.obligation[actif_name])):
-                print(self.actifs)
                 if self.obligation[actif_name][i][2] == current_date:  # SI la date d'execution est la date du jour
-                    print(self.obligation[actif_name][i])
                     if self.obligation[actif_name][i][0] > 0:  # Si c'est un ordre d'achat
                         self.buy_actif(actif_name, self.obligation[actif_name][i][0], self.obligation[actif_name][i][1],
                                        current_date)
                     else:
-                        print("selling", actif_name, -self.obligation[actif_name][i][0],
-                              self.obligation[actif_name][i][1], current_date)
                         self.sell_actif(actif_name, -self.obligation[actif_name][i][0],
                                         self.obligation[actif_name][i][1], current_date)
         return
+
+    def do_nothing(self, date: int):
+        self.historique_credit[date] = self.credit
+
+    """
+    :param
+    sigma : volatilite
+    r : taux interet sans risque
+    K prix d exerice
+    T temps avant echeance
+    S prix du sous jacent
+    """
+    def compute_price_obligation(self, S: float, execution_date: int, K: float, r: float, sigma: float,
+                                 current_date: int):
+        T = execution_date - current_date
+        d1 :float= 1 / (sigma * np.sqrt(T)) * (np.log(S / K) + (r + 0.5 * sigma * sigma) * T)
+        d2 :float = d1 - sigma * np.sqrt(T)
+        price = -S * quad(norm, -np.inf, d1)[0] + K * np.exp(-r * T) * quad(norm, -np.inf, d2)[0]
+        return price
+
+def norm(x: float):
+    return (1 / (np.sqrt(2 * np.pi))) * np.exp(-0.5 * (x) ** 2)

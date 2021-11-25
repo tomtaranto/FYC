@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 from marche import Marche
 from utils import init_marche_un_actif
 
@@ -49,11 +51,13 @@ def exo2():
 
 def exo3():
     marche = Marche()
-    marche.add_actif('Shiba', 2255990535.605459, (7827138285.646066 / 2255990535.605459))
+    #marche.add_actif('Shiba', 2255990535.605459, (7827138285.646066 / 2255990535.605459))
+    marche.add_actif('lvmh', 505000000, 734.70)
+
     marche.add_agent('human', 'Eddy', 100)
     marche.agents[0].add_strat(marche.agents[0].third_strat)
     marche.next_day()
-    for time in range(1, 20):
+    for time in range(1, 100):
         marche.agents[0].strat[0](marche.current_time, marche.actifs[0])
         marche.next_day()
     marche.agents[0].compte.sell_actif(marche.actifs[0].name, marche.agents[0].compte.actifs[marche.actifs[0].name],
@@ -62,6 +66,8 @@ def exo3():
     print(marche.agents[0].compte.historique_obligation)
     print(marche.agents[0].compte.actifs)
     marche.agents[0].plot_compte(plot_obligation=True)
+    plt.plot(list(marche.actifs[0].price_history.values()))
+    plt.show()
     return
 
 

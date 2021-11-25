@@ -51,8 +51,10 @@ class Agent:
     def third_strat(self,date: int, actif: Actif):
         periode = 3
         if date%periode == 0:
-            self.compte.add_obligation(date, actif.name, 1, actif.price, date + periode)
-            self.compte.add_obligation(date, actif.name, -1, actif.price * 1.5, date + periode)
+            self.compte.add_obligation(date, actif, 1, actif.price*0.9, date + periode)
+            self.compte.add_obligation(date, actif, -1, actif.price *1.1, date + periode)
+        else:
+            self.compte.do_nothing(date)
         self.compte.resolve_obligation(date)
         print(actif.price)
 
