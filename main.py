@@ -57,7 +57,7 @@ def exo3():
     marche.add_agent('human', 'Eddy', 100)
     marche.agents[0].add_strat(marche.agents[0].third_strat)
     marche.next_day()
-    for time in range(1, 100):
+    for time in range(1, 6000):
         marche.agents[0].strat[0](marche.current_time, marche.actifs[0])
         marche.next_day()
     marche.agents[0].compte.sell_actif(marche.actifs[0].name, marche.agents[0].compte.actifs[marche.actifs[0].name],
@@ -72,8 +72,8 @@ def exo3():
 
 
 def main():
-    exo1()
-    exo2()
+    #exo1()
+    #exo2()
     exo3()
 
 

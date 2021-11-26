@@ -41,9 +41,11 @@ class Actif():
 
     # Populate history with data
     def load(self, filepath):
-        df = pd.read_csv(filepath)
         if 'shib' in filepath:
+            df = pd.read_csv(filepath)
             df = df[df.market_cap != 0.0].reset_index(drop=True)
+        else :
+            df = pd.read_csv(filepath, sep=";", header=0)
         self.real_data = df
 
     # Update price and quantity with today's data
@@ -54,9 +56,9 @@ class Actif():
             self.price = float(self.real_data.iloc[date].market_cap / self.real_data.iloc[date].total_volume)
         else:
             self.quantity = 505000000
-            self.price = self.real_data.loc[self.real_data.index[date+1], 'Close'] # TODO FIx IT EDDY !
+            self.price = self.real_data.loc[len(self.real_data.index) - self.real_data.index[date+1], 'Close'] # TODO FIx IT EDDY !
         self.price_history[date] = self.price
-        self.volatility = np.std(list(self.price_history.values()))
+        self.volatility = np.std(list(self.price_history.values())[-5:])
 
 
 

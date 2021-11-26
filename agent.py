@@ -49,7 +49,7 @@ class Agent:
 
     #Uniquement des bull, centrées en le prix actuel
     def third_strat(self,date: int, actif: Actif):
-        periode = 3
+        periode = 60
         if date%periode == 0:
             self.compte.add_obligation(date, actif, 1, actif.price*0.9, date + periode)
             self.compte.add_obligation(date, actif, -1, actif.price *1.1, date + periode)
