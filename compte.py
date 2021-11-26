@@ -1,4 +1,5 @@
 from scipy.integrate import quad
+from scipy import stats
 import numpy as np
 
 from actif import Actif
@@ -96,11 +97,10 @@ class Compte():
             self.historique_obligation[date_achat] = dict()
             self.historique_obligation[date_achat][nom] = []
             self.historique_obligation[date_achat][nom].append([quantite, prix, date_execution])
-        # TODO Calculer le prix de l obligation et l'enlever du credit
-        if quantite >0: # Option achat/Call
-            price : float = max(0.0, actif.price - prix)
-        else: # Option de vente / Put
-            price = self.compute_price_obligation(actif.price, date_execution, prix, 0.0, actif.volatility,date_achat)
+        if quantite > 0:  # Option achat/Call
+            price: float = max(0.0, actif.price - prix)
+        else:  # Option de vente / Put
+            price = self.compute_price_obligation(actif.price, date_execution, prix, 0.0001, actif.volatility, date_achat)
         self.change_credit(-abs(price))
         print("price : ", price, " volatility : ", actif.volatility)
         self.historique_credit[date_achat] = self.credit
@@ -136,13 +136,17 @@ class Compte():
     T temps avant echeance
     S prix du sous jacent
     """
+
     def compute_price_obligation(self, S: float, execution_date: int, K: float, r: float, sigma: float,
                                  current_date: int):
-        T = execution_date - current_date
-        d1 :float= 1 / (sigma * np.sqrt(T)) * (np.log(S / K) + (r + 0.5 * sigma * sigma) * T)
-        d2 :float = d1 - sigma * np.sqrt(T)
+        T = (execution_date - current_date)/365
+        d1: float = (np.log(S / K) + (r + 0.5 * sigma * sigma) * T) / (sigma * np.sqrt(T))
+        d2: float = d1 - sigma * np.sqrt(T)
+        print("d1:",d1,"d2:",d2)
         price = -S * quad(norm, -np.inf, d1)[0] + K * np.exp(-r * T) * quad(norm, -np.inf, d2)[0]
+        print("potential price : ", -S*stats.norm.cdf(-d1) + K * np.exp(-r * T)*stats.norm.cdf(-d2))
         return price
 
+
 def norm(x: float):
-    return (1 / (np.sqrt(2 * np.pi))) * np.exp(-0.5 * (x) ** 2)
+    return  np.exp(-0.5 * (x ** 2))/ (np.sqrt(2 * np.pi))

@@ -58,7 +58,7 @@ class Actif():
             self.quantity = 505000000
             self.price = self.real_data.loc[len(self.real_data.index) - self.real_data.index[date+1], 'Close'] # TODO FIx IT EDDY !
         self.price_history[date] = self.price
-        self.volatility = np.std(list(self.price_history.values())[-5:])
+        self.volatility = np.std(list(self.price_history.values())[-5:]) / self.price
 
 
 
