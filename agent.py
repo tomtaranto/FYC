@@ -1,9 +1,12 @@
 import numpy as np
-
 from actif import Actif
 from compte import Compte
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
+import pandas as pd
+from tqdm import tqdm
+
+import tensorflow as tf
 
 
 class Agent:
@@ -14,6 +17,49 @@ class Agent:
         self.compte = Compte(start_credit, 0)
         self.age = 0
         self.strat = []
+        self.model=None
+
+    def train(self, actif: Actif, strategie_type:str, maturity:int, epochs:int):
+        if self.agent_type != 'bot':
+            print("You are not a bot, use your brain to train")
+            return
+        if 'lvmh' not in actif.name:
+            print("Actif not supported \n only lvmh supported yet")
+            return
+        df = pd.read_csv(actif.name + "_train.csv")  # On charge les donnees d entrainement
+        df = df[['Close', strategie_type + str(maturity) + 'x1',
+                 strategie_type + str(maturity) + 'x2']]  # On ne garde que les colonnes qui nous interessent
+        df.dropna(inplace=True)  # On retire les jours sans données
+        price = df['Close']
+        x1 = df[strategie_type + str(maturity) + 'x1']
+        x2 = df[strategie_type + str(maturity) + 'x2']
+        X = np.zeros((len(x1), 1000))
+        for i in tqdm(range(len(x1)), desc='Creation des donnees'):
+            start_price = price[i] # Valeur pour fill si on a pas assez de donnees
+            hist_len = min(999, i)
+            hist_values = price[i - hist_len:i + 1] # Les valeurs à ajouter sont les 1000 dernieres ( ou le maximum) a partir de i
+            X[i, -len(hist_values):] = hist_values # On place ces valeurs dans notre input
+            X[i, :][X[i, :] == 0] = start_price # On remplace les 0 par le prix de depart
+        X = X / 740 # On normalise nos données
+        model = self.create_model3() # On créé le modele
+        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5),
+                      #loss=tf.keras.losses.MeanAbsoluteError(),
+                      loss = tf.keras.losses.MeanAbsolutePercentageError(), # Utilisation d'une erreur en pourcentage
+                      metrics=['MAPE']) # On le compile
+
+        history = model.fit(X, [x1, x2],
+                            epochs=epochs,
+                            batch_size=500,
+                            verbose=1, validation_split=0.1) # On fit nos données
+        print(history.history)
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('training loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'val'], loc='upper left')
+        plt.show() # On affiche le resultat de l'entrainement
+        self.model=model # On enregistre notre modele pour l agent
 
     # Ajout d'une strategie
     def add_strat(self, strategie):
@@ -57,7 +103,16 @@ class Agent:
             self.compte.do_nothing(date)
         self.compte.resolve_obligation(date)
 
-
+    def fourth_strat(self, date: int, actif: Actif,inputs, periode):
+        assert self.model is not None # On s assure que le train aie deja ete effectue
+        x1,x2 = self.model(inputs) # On calcule le prix des options
+        #print("actif price : ",actif.price, " x1 : ",x1, " x2 : ",x2, " inputs : ", inputs[:30])
+        if date % periode == 0:
+            self.compte.add_obligation(date, actif, 10, x1, date + periode)
+            self.compte.add_obligation(date, actif, -10, x2, date + periode)
+        else:
+            self.compte.do_nothing(date)
+        self.compte.resolve_obligation(date)
 
 
     def plot_compte(self, plot_obligation=False):
@@ -113,3 +168,29 @@ class Agent:
         ax1.legend()
         ax1.grid(visible=True, axis="y", linestyle='-')
         plt.show()
+
+    def create_model2(self):
+        inputs = tf.keras.Input(shape = (1000,))
+        x = tf.keras.layers.Reshape((1000,1))(inputs)
+        lstm = tf.keras.layers.LSTM(16)
+        x = lstm(x)
+        x = tf.keras.layers.Flatten()(x)
+        x = tf.keras.layers.Dense(1000, activation='relu')(x)
+        x = tf.keras.layers.Dropout(0.1)(x)
+        x = tf.keras.layers.Dense(1000, activation='relu')(x)
+        x1 = tf.keras.layers.Dense(1, activation='linear')(x)
+        x2 = tf.keras.layers.Dense(1, activation='linear')(x)
+        model = tf.keras.Model(inputs,[x1,x2])
+        return model
+
+
+    def create_model3(self):
+        inputs = tf.keras.Input(shape = (1000,))
+        x = tf.keras.layers.Dense(1000, activation='relu')(inputs)
+        for _ in range(5):
+            x = tf.keras.layers.Dropout(0.1)(x)
+            x = tf.keras.layers.Dense(1000, activation='relu')(x)
+        x1 = tf.keras.layers.Dense(1, activation='linear')(x)
+        x2 = tf.keras.layers.Dense(1, activation='linear')(x)
+        model = tf.keras.Model(inputs,[x1,x2])
+        return model
