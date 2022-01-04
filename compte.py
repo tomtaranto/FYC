@@ -102,7 +102,6 @@ class Compte():
         else:  # Option de vente / Put
             price = self.compute_price_obligation(actif.price, date_execution, prix, 0.0001, actif.volatility, date_achat)
         self.change_credit(-abs(price))
-        print("price : ", price, " volatility : ", actif.volatility)
         self.historique_credit[date_achat] = self.credit
         return
 
@@ -142,9 +141,8 @@ class Compte():
         T = (execution_date - current_date)/365
         d1: float = (np.log(S / K) + (r + 0.5 * sigma * sigma) * T) / (sigma * np.sqrt(T))
         d2: float = d1 - sigma * np.sqrt(T)
-        print("d1:",d1,"d2:",d2)
-        price = -S * quad(norm, -np.inf, d1)[0] + K * np.exp(-r * T) * quad(norm, -np.inf, d2)[0]
-        print("potential price : ", -S*stats.norm.cdf(-d1) + K * np.exp(-r * T)*stats.norm.cdf(-d2))
+        #price = -S * quad(norm, -np.inf, d1)[0] + K * np.exp(-r * T) * quad(norm, -np.inf, d2)[0]
+        price = -S*stats.norm.cdf(-d1) + K * np.exp(-r * T)*stats.norm.cdf(-d2)
         return price
 
 

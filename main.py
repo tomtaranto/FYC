@@ -63,8 +63,8 @@ def exo3():
     marche.agents[0].compte.sell_actif(marche.actifs[0].name, marche.agents[0].compte.actifs[marche.actifs[0].name],
                                        marche.actifs[0].price,
                                        marche.current_time)
-    print(marche.agents[0].compte.historique_obligation)
-    print(marche.agents[0].compte.actifs)
+    #print(marche.agents[0].compte.historique_obligation)
+    #print(marche.agents[0].compte.actifs)
     marche.agents[0].plot_compte(plot_obligation=True)
     plt.plot(list(marche.actifs[0].price_history.values()))
     plt.show()
