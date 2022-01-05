@@ -1,4 +1,6 @@
 import numpy as np
+import numpy.linalg
+
 from actif import Actif
 from compte import Compte
 import matplotlib.pyplot as plt
@@ -18,6 +20,7 @@ class Agent:
         self.age = 0
         self.strat = []
         self.model=None
+        self.model_strat = None
 
     def train(self, actif: Actif, strategie_type:str, maturity:int, epochs:int):
         if self.agent_type != 'bot':
@@ -114,6 +117,96 @@ class Agent:
             self.compte.do_nothing(date)
         self.compte.resolve_obligation(date)
 
+    def train_strategy(self, actif: Actif, strategie_type:str, maturity:int, epochs:int):
+        if self.agent_type != 'bot':
+            print("You are not a bot, use your brain to train")
+            return
+        if 'lvmh' not in actif.name:
+            print("Actif not supported \n only lvmh supported yet")
+            return
+        df = pd.read_csv(actif.name + "_train.csv")  # On charge les donnees d entrainement
+        df = df[['Close', 'best_strat' + str(maturity) ]]  # On ne garde que les colonnes qui nous interessent
+        df.dropna(inplace=True)  # On retire les jours sans données
+        price = df['Close']
+        #Y = tf.keras.utils.to_categorical(df['best_strat' + str(maturity)])
+        Y = df['best_strat' + str(maturity)]
+        X = np.zeros((len(Y), 1000))
+        for i in tqdm(range(len(Y)), desc='Creation des donnees'):
+            start_price = price[i]  # Valeur pour fill si on a pas assez de donnees
+            hist_len = min(999, i)
+            hist_values = price[
+                          i - hist_len:i + 1]  # Les valeurs à ajouter sont les 1000 dernieres ( ou le maximum) a partir de i
+            X[i, -len(hist_values):] = hist_values  # On place ces valeurs dans notre input
+            X[i, :][X[i, :] == 0] = start_price  # On remplace les 0 par le prix de depart
+        X = X / 740  # On normalise nos données
+
+        split = 0.7
+        chosen_train_idx = np.random.choice(list(range(len(Y))), int(len(Y)*split),replace=False)
+        chosen_test_idx = [x for x in range(len(Y)) if x not in chosen_train_idx]
+
+        X_train = np.array(X[chosen_train_idx])
+        X_test = np.array(X[chosen_test_idx])
+        Y = tf.keras.utils.to_categorical(Y,num_classes=2)
+        Y_train = np.array(Y[chosen_train_idx])
+        Y_test = np.array(Y[chosen_test_idx])
+        print("shape start = ",X_train.shape,Y_train.shape, X_test.shape, Y_test.shape)
+        print(np.sum(Y_test)/len(Y_test))
+
+        def predict(x,win,wout):
+            a = np.dot(x, win)  # Passage dans le reseau
+            a = np.maximum(a, 0, a)
+            y = np.dot(a, wout)
+            return y
+
+        INPUT_LENGHT = X_train.shape[1]  # 6800 et quelques
+        HIDDEN_UNITS = 50
+        Win = np.random.normal(size=[INPUT_LENGHT, HIDDEN_UNITS]) # Initialisation aléatoire des poids
+        for epoch in tqdm(range(1)): # Boucle d'apprentissage
+            a = np.dot(X_train, Win)  # Passage dans le reseau
+            X = np.maximum(a, 0, a) # Relu activation
+            Xt = np.transpose(X)
+            # On utilise la formule de mise a jour des poids :
+            # (Xt X)-1 * Xt Y
+            Wout = np.dot(np.linalg.pinv(np.dot(Xt, X)), np.dot(Xt, Y_train))
+            # On monitor l'entrainement:
+            y = predict(X_test,Win, Wout)
+            correct = 0
+            total = y.shape[0]
+            for i in range(total):
+                #print("predictions : ", y[i])
+                predicted = np.argmax(y[i])
+                #predicted = np.round(y[i])
+                test = np.argmax(Y_test[i])
+                #test = Y_test[i]
+                #print("test : ",test, "vs predicted : ",predicted, " result : ", predicted==test)
+                correct = correct + (1 if predicted == test else 0)
+            print('Accuracy: {:f}'.format(correct / total))
+
+
+
+        '''
+        model = self.create_model4()  # On créé le modele
+        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5),
+                      # loss=tf.keras.losses.MeanAbsoluteError(),
+                      loss=tf.keras.losses.BinaryCrossentropy(),  # Utilisation d'une erreur en pourcentage
+                      metrics=[tf.keras.metrics.BinaryAccuracy()])  # On le compile
+
+
+        history = model.fit(X, Y,
+                            epochs=epochs,
+                            batch_size=500,
+                            verbose=1, validation_split=0.1)  # On fit nos données
+        print(history.history)
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('training loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'val'], loc='upper left')
+        plt.show()  # On affiche le resultat de l'entrainement
+        self.model = model  # On enregistre notre modele pour l agent
+        '''
+
 
     def plot_compte(self, plot_obligation=False):
         x = list(range(min(self.compte.historique), max(self.compte.historique) + 1))
@@ -193,4 +286,14 @@ class Agent:
         x1 = tf.keras.layers.Dense(1, activation='linear')(x)
         x2 = tf.keras.layers.Dense(1, activation='linear')(x)
         model = tf.keras.Model(inputs,[x1,x2])
+        return model
+
+    def create_model4(self):
+        inputs = tf.keras.Input(shape = (1000,))
+        x = tf.keras.layers.Dense(1000, activation='relu')(inputs)
+        for _ in range(5):
+            x = tf.keras.layers.Dropout(0.1)(x)
+            x = tf.keras.layers.Dense(1000, activation='relu')(x)
+        x1 = tf.keras.layers.Dense(2, activation='softmax')(x)
+        model = tf.keras.Model(inputs,x1)
         return model
