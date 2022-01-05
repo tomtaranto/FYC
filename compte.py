@@ -4,7 +4,9 @@ import numpy as np
 
 from actif import Actif
 
-
+# TODO On a fait uniquement ACHETER des options d'achat et de vente
+# TODO OR !!!!
+# TODO les strategies se basent sur le fait qu'on puisse VENDRE en meme temps des options d'achat et de vente
 class Compte():
     def __init__(self, credit: float, date_creation: int):
         self.credit = credit
@@ -15,6 +17,7 @@ class Compte():
         self.obligation = dict()  # nom_actif : list(quantité, prix, date execution, date achat)
         self.historique_obligation = dict()  # date achat : nom_actif : list(quantite, prix, date execution)
         self.grecques = None
+
 
     def get_credit(self) -> float:
         return self.credit
