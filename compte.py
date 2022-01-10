@@ -81,6 +81,7 @@ class Compte():
         return self.historique
 
     # On ajoute une obligation
+    # TODO Ajouter le type (achat/vente)
     def add_obligation(self, date_achat: int, actif: Actif, quantite: int, prix: float, date_execution: int) -> None:
         # si le nom est deja une clé du dict
         nom = actif.name
@@ -114,6 +115,7 @@ class Compte():
     def get_grecques(self) -> dict:
         return self.grecques
 
+    # TODO ajouter deux conditions pour vérifier si il est interessant d exercer l option
     def resolve_obligation(self, current_date: int):
         # nom_actif : [quantité, prix, date execution, date achat]
         for actif_name in self.obligation:
