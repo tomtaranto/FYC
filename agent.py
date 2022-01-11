@@ -102,26 +102,37 @@ class Agent:
     # Uniquement des bull, centrées en le prix actuel
     # TODO ajouter le type d obligation
     def third_strat(self, date: int, actif: Actif):
-        periode = 2
+        periode = 5
         if date % periode == 0:
-            self.compte.add_obligation(date, actif, 10, actif.price * 0.8, date + periode)
-            self.compte.add_obligation(date, actif, -10, actif.price * 1.5, date + periode)
+            credit = self.compte.get_credit()
+            self.compte.add_obligation(date, actif, 10, actif.price *0.99, date + periode, 'achat')
+            self.compte.add_obligation(date, actif, 10, actif.price *1.01, date + periode, 'vente')
+            print("cout de la strategie : ", self.compte.get_credit() - credit)
         else:
             self.compte.do_nothing(date)
-        self.compte.resolve_obligation(date)
-
+        if actif.name in self.compte.actifs:
+            if self.compte.actifs[actif.name]>0:
+                self.compte.sell_actif(actif.name,self.compte.actifs[actif.name],actif.price,date)
+            elif self.compte.actifs[actif.name]<0:
+                self.compte.buy_actif(actif.name,self.compte.actifs[actif.name],actif.price,date)
+        # self.compte.resolve_obligation(date)
 
     # TODO ajouter le type d obligation
     def fourth_strat(self, date: int, actif: Actif, inputs, periode: int):
         assert self.model is not None  # On s assure que le train aie deja ete effectue
         x1, x2 = self.model(inputs)  # On calcule le prix des options
-        # print("actif price : ",actif.price, " x1 : ",x1, " x2 : ",x2, " inputs : ", inputs[:30])
+        print("actif price : ",actif.price, " x1 : ",x1, " x2 : ",x2, " inputs : ", inputs[:30])
         if date % periode == 0:
-            self.compte.add_obligation(date, actif, 10, x1, date + periode)
-            self.compte.add_obligation(date, actif, -10, x2, date + periode)
+            self.compte.add_obligation(date, actif, 10, x1, date + periode,'achat')
+            self.compte.add_obligation(date, actif, -10, x2, date + periode,'vente')
         else:
             self.compte.do_nothing(date)
-        self.compte.resolve_obligation(date)
+        if actif.name in self.compte.actifs:
+            if self.compte.actifs[actif.name]>0:
+                self.compte.sell_actif(actif.name,self.compte.actifs[actif.name],actif.price,date)
+            elif self.compte.actifs[actif.name]<0:
+                self.compte.buy_actif(actif.name,self.compte.actifs[actif.name],actif.price,date)
+        # self.compte.resolve_obligation(date)
 
     def train_strategy(self, actif: Actif, strategie_type: str, maturity: int, epochs: int):
         if self.agent_type != 'bot':
@@ -185,8 +196,6 @@ class Agent:
         self.win = Win
         self.wout = Wout
 
-
-
     # TODO ajouter le type d obligation en faisant attention d'inverser suivant BULL et Bear
     def fifth_strat(self, date: int, actif: Actif, inputs, periode: int):
         assert self.win is not None and self.wout is not None
@@ -213,7 +222,7 @@ class Agent:
             strat = 'bear'
             self.compte.do_nothing(date)
             # TODO A gerer plus tard
-        self.compte.resolve_obligation(date)
+        # self.compte.resolve_obligation(date)
 
     '''
         model = self.create_model4()  # On créé le modele
@@ -240,7 +249,7 @@ class Agent:
 
     # TODO gerer le type d'option
     def plot_compte(self, plot_obligation=False):
-        x = list(range(min(self.compte.historique), max(self.compte.historique) + 1))
+        x = list(range(min(self.compte.historique_credit), max(self.compte.historique_credit) + 1))
         # x = np.linspace(1, len(self.compte.historique)+1, len(self.compte.historique)+1)
         y = np.zeros_like(x)
         y1 = np.zeros_like(x)

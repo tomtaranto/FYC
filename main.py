@@ -64,15 +64,17 @@ def exo3():
     marche.add_agent('human', 'Eddy', 100)
     marche.agents[0].add_strat(marche.agents[0].third_strat)
     marche.next_day()
-    for time in range(1, 6000):
+    for time in tqdm(range(1, 6000)):
+        print("volatilite : ", marche.actifs[0].volatility)
         marche.agents[0].strat[0](marche.current_time, marche.actifs[0])
         marche.next_day()
-    marche.agents[0].compte.sell_actif(marche.actifs[0].name, marche.agents[0].compte.actifs[marche.actifs[0].name],
-                                       marche.actifs[0].price,
-                                       marche.current_time)
-    # print(marche.agents[0].compte.historique_obligation)
-    # print(marche.agents[0].compte.actifs)
-    marche.agents[0].plot_compte(plot_obligation=True)
+    print(marche.agents[0].compte.historique_obligation)
+    print(marche.agents[0].compte.actifs)
+    # marche.agents[0].compte.sell_actif(marche.actifs[0].name, marche.agents[0].compte.actifs[marche.actifs[0].name],
+    #                                    marche.actifs[0].price,
+    #                                    marche.current_time)
+
+    marche.agents[0].plot_compte(plot_obligation=False)
     plt.plot(list(marche.actifs[0].price_history.values()))
     plt.show()
     return
@@ -97,8 +99,8 @@ def exo4():
     marche.agents[0].compte.sell_actif(marche.actifs[0].name, marche.agents[0].compte.actifs[marche.actifs[0].name],
                                        marche.actifs[0].price,
                                        marche.current_time)
-    # print(marche.agents[0].compte.historique_obligation)
-    # print(marche.agents[0].compte.actifs)
+    print(marche.agents[0].compte.historique_obligation)
+    print(marche.agents[0].compte.actifs)
     marche.agents[0].plot_compte(plot_obligation=True)
     plt.plot(list(marche.actifs[0].price_history.values()))
     plt.show()
@@ -139,7 +141,8 @@ def main():
     # exo1()
     # exo2()
     # exo3()
-    test()
+    exo4()
+    #test()
 
 
 if __name__ == '__main__':

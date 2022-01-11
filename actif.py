@@ -12,13 +12,12 @@ class Actif():
         self.history = history
         self.price_history = dict()  # date : prix
         self.real_data = None
-        self.volatility = 0
+        self.volatility = 0.01
         if 'shib' in name.lower():
             self.load('shib-usd-max.csv')  # TODO mettre le nom en parametre si on a plusieurs actifs
         else:
             print()
             self.load('lvmh.csv')
-
 
     def get_price(self) -> float:
         return self.price
@@ -44,7 +43,7 @@ class Actif():
         if 'shib' in filepath:
             df = pd.read_csv(filepath)
             df = df[df.market_cap != 0.0].reset_index(drop=True)
-        else :
+        else:
             df = pd.read_csv(filepath, sep=";", header=0)
         self.real_data = df
 
@@ -56,19 +55,29 @@ class Actif():
             self.price = float(self.real_data.iloc[date].market_cap / self.real_data.iloc[date].total_volume)
         else:
             self.quantity = 505000000
-            self.price = self.real_data.loc[len(self.real_data.index) - self.real_data.index[date+1], 'Close'] # TODO FIx IT EDDY !
+            self.price = self.real_data.loc[
+                len(self.real_data.index) - self.real_data.index[date + 1], 'Close']  # TODO FIx IT EDDY !
         self.price_history[date] = self.price
-        self.volatility = np.std(list(self.price_history.values())[-5:]) / self.price
+        # self.volatility = np.std(list(self.price_history.values())[-50:])/self.price *np.sqrt(356)#/ self.price
+        self.volatility = self.compute_volatility()
 
+    def compute_volatility(self):
+        l = []
+        hist_prices = list(self.price_history.values())[-365:]
+        if len(hist_prices)<2:
+            return 0.001
+        for i in range(1, len(hist_prices)):
+            l.append(np.log(hist_prices[i - 1] / hist_prices[i]))
+        return max(np.std(np.array(l)) * np.sqrt(365), 0.001)
 
 
 def main():
-    a = Actif('Shiba', 2255990535.605459, 7827138285.646066/2255990535.605459, dict())
+    a = Actif('Shiba', 2255990535.605459, 7827138285.646066 / 2255990535.605459, dict())
     print(a.price, a.quantity, a.history, a.real_data)
-    for i in range(1,160):
+    for i in range(1, 160):
         a.update_from_date(i)
     print(a.price, a.quantity, a.history)
 
+
 if __name__ == '__main__':
     main()
-
