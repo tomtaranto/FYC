@@ -91,7 +91,7 @@ def exo4():
     marche.agents[0].train(marche.actifs[0], 'bull', periode, epochs) # On entraine notre agent
     marche.next_day()
     inputs = deque([marche.actifs[0].price]*1000)
-    for time in tqdm(range(1, 60)):
+    for time in tqdm(range(1, 6000)):
         marche.agents[0].strat[0](marche.current_time, marche.actifs[0], np.array(inputs).reshape(1,1000)/740,periode)
         marche.next_day()
         inputs.append(marche.actifs[0].price) # On ajoute le prix courant
@@ -141,8 +141,8 @@ def main():
     # exo1()
     # exo2()
     # exo3()
-    exo4()
-    #test()
+    # exo4()
+    test()
 
 
 if __name__ == '__main__':

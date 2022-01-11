@@ -121,10 +121,10 @@ class Agent:
     def fourth_strat(self, date: int, actif: Actif, inputs, periode: int):
         assert self.model is not None  # On s assure que le train aie deja ete effectue
         x1, x2 = self.model(inputs)  # On calcule le prix des options
-        print("actif price : ",actif.price, " x1 : ",x1, " x2 : ",x2, " inputs : ", inputs[:30])
+        # print("actif price : ",actif.price, " x1 : ",x1, " x2 : ",x2, " inputs : ", inputs[0][-60:])
         if date % periode == 0:
             self.compte.add_obligation(date, actif, 10, x1, date + periode,'achat')
-            self.compte.add_obligation(date, actif, -10, x2, date + periode,'vente')
+            self.compte.add_obligation(date, actif, 10, x2, date + periode,'vente')
         else:
             self.compte.do_nothing(date)
         if actif.name in self.compte.actifs:
@@ -213,8 +213,8 @@ class Agent:
             x1, x2 = self.model(inputs)  # On calcule le prix des options
             # print("actif price : ",actif.price, " x1 : ",x1, " x2 : ",x2, " inputs : ", inputs[:30])
             if date % periode == 0:
-                self.compte.add_obligation(date, actif, 10, x1, date + periode)
-                self.compte.add_obligation(date, actif, -10, x2, date + periode)
+                self.compte.add_obligation(date, actif, 10, x1, date + periode,'achat')
+                self.compte.add_obligation(date, actif, 10, x2, date + periode,'vente')
             else:
                 self.compte.do_nothing(date)
 
