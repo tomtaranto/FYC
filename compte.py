@@ -4,10 +4,6 @@ import numpy as np
 
 from actif import Actif
 
-
-# TODO On a fait uniquement ACHETER des options d'achat et de vente
-# TODO OR !!!!
-# TODO les strategies se basent sur le fait qu'on puisse VENDRE en meme temps des options d'achat et de vente
 class Compte():
     def __init__(self, credit: float, date_creation: int):
         self.credit = credit
@@ -79,11 +75,10 @@ class Compte():
                 return True
         return False
 
-    def get_historique(self) -> dict:  # todo changer le type de retour
+    def get_historique(self) -> dict:
         return self.historique
 
     # On ajoute une obligation
-    # TODO Ajouter le type (achat/vente)
     def add_obligation(self, date_achat: int, actif: Actif, quantite: int, prix: float, date_execution: int,
                        type: str) -> None:
         assert type in ['achat', 'vente']
@@ -105,15 +100,6 @@ class Compte():
             self.historique_obligation[date_achat] = dict()
             self.historique_obligation[date_achat][nom] = []
             self.historique_obligation[date_achat][nom].append([quantite, prix, date_execution, type])
-        # TODO refaire en gerant le type achat vente
-        '''
-        if quantite > 0:  # Option achat/Call
-            price: float = max(0.0, actif.price - prix)
-        else:  # Option de vente / Put
-            price = self.compute_price_obligation(actif.price, date_execution, prix, 0.0001, actif.volatility, date_achat)
-        self.change_credit(-abs(price))
-        self.historique_credit[date_achat] = self.credit
-        '''
         # Prix unitaire de l'option
         if quantite > 0:
             price: float = self.compute_price_obligation(actif.price, date_execution, prix, 0.000001, actif.volatility,
@@ -139,40 +125,6 @@ class Compte():
     def get_grecques(self) -> dict:
         return self.grecques
 
-    # TODO ajouter deux conditions pour vérifier si il est interessant d exercer l option
-    # def resolve_obligation(self, current_date: int):
-    #     # nom_actif : [quantité, prix, date execution, date achat, type]
-    #     for actif_name in self.obligation:
-    #         for i in range(len(self.obligation[actif_name])):
-    #             if self.obligation[actif_name][i][2] == current_date:  # SI la date d'execution est la date du jour
-    #                 """
-    #                 if self.obligation[actif_name][i][0] > 0:  # Si c'est un ordre d'achat
-    #                     self.buy_actif(actif_name, self.obligation[actif_name][i][0], self.obligation[actif_name][i][1],
-    #                                    current_date)
-    #                 else:
-    #                     self.sell_actif(actif_name, -self.obligation[actif_name][i][0],
-    #                                     self.obligation[actif_name][i][1], current_date)
-    #                 """
-    #                 if self.obligation[actif_name][i][0] > 0:  # Si c'est un ordre d'achat
-    #                     if self.obligation[actif_name][i][4]=='achat': # J'ai achete une option d acheter
-    #                         # Ajouter un check pour verifier si l obligation est interessant par rapport au prix reel de l actif
-    #                         pass
-    #                     if self.obligation[actif_name][i][4]=='vente': # J'ai vendu l option d'acheter
-    #                         # On check si le vendeur a interet a acheter
-    #                         pass
-    #
-    #                     self.buy_actif(actif_name, self.obligation[actif_name][i][0], self.obligation[actif_name][i][1],
-    #                                    current_date)
-    #                 else:
-    #                     if self.obligation[actif_name][i][4] == 'achat':  # J'ai achete une option de vente
-    #                         # On check si le vendre au prix est plus interessant que le vendre au prix du marche
-    #                         pass
-    #                     if self.obligation[actif_name][i][4] == 'vete':  # J'ai vendu une option de vente
-    #                         # On check si le vendre au prix est plus interessant que le vendre au prix du marche
-    #                         pass
-    #                     self.sell_actif(actif_name, -self.obligation[actif_name][i][0],
-    #                                     self.obligation[actif_name][i][1], current_date)
-    #     return
 
     def do_nothing(self, date: int):
         self.historique_credit[date] = self.credit

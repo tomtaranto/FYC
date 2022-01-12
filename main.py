@@ -4,25 +4,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from marche import Marche
 from tqdm import tqdm
-from utils import init_marche_un_actif
 
 # Tous les jours, acheter un actif
 # TOus les 3 jours vendre cet actif
-"""
-def exo1_fake():
-    # On creer notre marche ainsi qu'une strategie simple
-    marche = init_marche_un_actif()
-    strategie = Strategie()
-    strategie.add_strat(strategie.first_strat)
-    marche.next_day()
-    # On fait avancer le marche de plusieurs jours
-    # TODO automatiser cela via une fonction
-    for time in range(1,20):
-        strategie.strat[0](marche.current_time, marche.actifs[0], marche.agents[0])
-        marche.next_day()
-
-    print(marche.agents[0].compte.historique)"""
-
 
 def exo1():
     marche = Marche()
@@ -65,11 +49,10 @@ def exo3():
     marche.agents[0].add_strat(marche.agents[0].third_strat)
     marche.next_day()
     for time in tqdm(range(1, 6000)):
-        print("volatilite : ", marche.actifs[0].volatility)
         marche.agents[0].strat[0](marche.current_time, marche.actifs[0])
         marche.next_day()
-    print(marche.agents[0].compte.historique_obligation)
-    print(marche.agents[0].compte.actifs)
+    # print(marche.agents[0].compte.historique_obligation)
+    # print(marche.agents[0].compte.actifs)
     # marche.agents[0].compte.sell_actif(marche.actifs[0].name, marche.agents[0].compte.actifs[marche.actifs[0].name],
     #                                    marche.actifs[0].price,
     #                                    marche.current_time)
@@ -113,9 +96,11 @@ def test():
     marche.add_actif('lvmh', 505000000, 734.70)
     marche.add_agent('bot', 'terminator', 100)
     marche.agents[0].add_strat(marche.agents[0].fifth_strat)
-    periode = 10
+    periode = 2
     epochs = 60
+    marche.agents[0].train(marche.actifs[0], 'bear', periode, epochs)  # On entraine notre agent
     marche.agents[0].train(marche.actifs[0], 'bull', periode, epochs) # On entraine notre agent
+
     marche.agents[0].train_strategy(marche.actifs[0], 'bull', periode, epochs) # On entraine notre agent
     marche.next_day()
     inputs = deque([marche.actifs[0].price]*1000)

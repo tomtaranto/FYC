@@ -1,6 +1,9 @@
+import os.path
+
 import numpy as np
 import numpy.linalg
 
+import utils
 from actif import Actif
 from compte import Compte
 import matplotlib.pyplot as plt
@@ -21,6 +24,7 @@ class Agent:
         self.strat = []
         self.model = None
         self.model_strat = None
+        self.model2 = None
         self.win = None
         self.wout = None
 
@@ -31,11 +35,16 @@ class Agent:
         if 'lvmh' not in actif.name:
             print("Actif not supported \n only lvmh supported yet")
             return
+        if not os.path.isfile(actif.name + "_train.csv"):
+            print(f"Could not find train file {actif.name + '_train.csv'}")
+            print("Generating file ...")
+            utils.generate_true_data('lvmh.csv')
+            print("File created")
         df = pd.read_csv(actif.name + "_train.csv")  # On charge les donnees d entrainement
         df = df[['Close', strategie_type + str(maturity) + 'x1',
                  strategie_type + str(maturity) + 'x2']]  # On ne garde que les colonnes qui nous interessent
         df.dropna(inplace=True)  # On retire les jours sans données
-        price = df['Close']
+        price = list(df['Close'])
         x1 = df[strategie_type + str(maturity) + 'x1']
         x2 = df[strategie_type + str(maturity) + 'x2']
         X = np.zeros((len(x1), 1000))
@@ -57,15 +66,18 @@ class Agent:
                             epochs=epochs,
                             batch_size=500,
                             verbose=1, validation_split=0.1)  # On fit nos données
-        print(history.history)
         plt.plot(history.history['loss'])
         plt.plot(history.history['val_loss'])
         plt.title('training loss')
         plt.ylabel('loss')
         plt.xlabel('epoch')
         plt.legend(['train', 'val'], loc='upper left')
+        plt.title(f"training curve for strategy : {strategie_type}")
         plt.show()  # On affiche le resultat de l'entrainement
-        self.model = model  # On enregistre notre modele pour l agent
+        if strategie_type == 'bull':
+            self.model = model  # On enregistre notre modele pour l agent
+        else:
+            self.model2 = 'bear'
 
     # Ajout d'une strategie
     def add_strat(self, strategie):
@@ -100,38 +112,40 @@ class Agent:
                 self.compte.buy_actif(actif.name, 1, actif.price, date)
 
     # Uniquement des bull, centrées en le prix actuel
-    # TODO ajouter le type d obligation
     def third_strat(self, date: int, actif: Actif):
         periode = 5
         if date % periode == 0:
             credit = self.compte.get_credit()
-            self.compte.add_obligation(date, actif, 10, actif.price *0.99, date + periode, 'achat')
-            self.compte.add_obligation(date, actif, 10, actif.price *1.01, date + periode, 'vente')
+            self.compte.add_obligation(date, actif, 10, actif.price * 0.99, date + periode, 'achat')
+            self.compte.add_obligation(date, actif, 10, actif.price * 1.01, date + periode, 'vente')
+            # SI on veut une strategie bear
+            # self.compte.add_obligation(date, actif, -10, actif.price *0.99, date + periode, 'vente')
+            # self.compte.add_obligation(date, actif, -10, actif.price *1.01, date + periode, 'achat')
             print("cout de la strategie : ", self.compte.get_credit() - credit)
         else:
             self.compte.do_nothing(date)
         if actif.name in self.compte.actifs:
-            if self.compte.actifs[actif.name]>0:
-                self.compte.sell_actif(actif.name,self.compte.actifs[actif.name],actif.price,date)
-            elif self.compte.actifs[actif.name]<0:
-                self.compte.buy_actif(actif.name,self.compte.actifs[actif.name],actif.price,date)
+            print(f"nombre d'acitf au {date} jour : {self.compte.actifs[actif.name]}")
+            if self.compte.actifs[actif.name] > 0:
+                self.compte.sell_actif(actif.name, self.compte.actifs[actif.name], actif.price, date)
+            elif self.compte.actifs[actif.name] < 0:
+                self.compte.buy_actif(actif.name, - self.compte.actifs[actif.name], actif.price, date)
         # self.compte.resolve_obligation(date)
 
-    # TODO ajouter le type d obligation
     def fourth_strat(self, date: int, actif: Actif, inputs, periode: int):
         assert self.model is not None  # On s assure que le train aie deja ete effectue
         x1, x2 = self.model(inputs)  # On calcule le prix des options
         # print("actif price : ",actif.price, " x1 : ",x1, " x2 : ",x2, " inputs : ", inputs[0][-60:])
         if date % periode == 0:
-            self.compte.add_obligation(date, actif, 10, x1, date + periode,'achat')
-            self.compte.add_obligation(date, actif, 10, x2, date + periode,'vente')
+            self.compte.add_obligation(date, actif, 10, x1, date + periode, 'achat')
+            self.compte.add_obligation(date, actif, 10, x2, date + periode, 'vente')
         else:
             self.compte.do_nothing(date)
         if actif.name in self.compte.actifs:
-            if self.compte.actifs[actif.name]>0:
-                self.compte.sell_actif(actif.name,self.compte.actifs[actif.name],actif.price,date)
-            elif self.compte.actifs[actif.name]<0:
-                self.compte.buy_actif(actif.name,self.compte.actifs[actif.name],actif.price,date)
+            if self.compte.actifs[actif.name] > 0:
+                self.compte.sell_actif(actif.name, self.compte.actifs[actif.name], actif.price, date)
+            elif self.compte.actifs[actif.name] < 0:
+                self.compte.buy_actif(actif.name, -self.compte.actifs[actif.name], actif.price, date)
         # self.compte.resolve_obligation(date)
 
     def train_strategy(self, actif: Actif, strategie_type: str, maturity: int, epochs: int):
@@ -196,7 +210,6 @@ class Agent:
         self.win = Win
         self.wout = Wout
 
-    # TODO ajouter le type d obligation en faisant attention d'inverser suivant BULL et Bear
     def fifth_strat(self, date: int, actif: Actif, inputs, periode: int):
         assert self.win is not None and self.wout is not None
 
@@ -213,44 +226,30 @@ class Agent:
             x1, x2 = self.model(inputs)  # On calcule le prix des options
             # print("actif price : ",actif.price, " x1 : ",x1, " x2 : ",x2, " inputs : ", inputs[:30])
             if date % periode == 0:
-                self.compte.add_obligation(date, actif, 10, x1, date + periode,'achat')
-                self.compte.add_obligation(date, actif, 10, x2, date + periode,'vente')
+                self.compte.add_obligation(date, actif, 10, x1, date + periode, 'achat')
+                self.compte.add_obligation(date, actif, 10, x2, date + periode, 'vente')
             else:
                 self.compte.do_nothing(date)
 
         else:
             strat = 'bear'
-            self.compte.do_nothing(date)
-            # TODO A gerer plus tard
+            x1, x2 = self.model(inputs)  # On calcule le prix des options
+            # print("actif price : ",actif.price, " x1 : ",x1, " x2 : ",x2, " inputs : ", inputs[:30])
+            if date % periode == 0:
+                self.compte.add_obligation(date, actif, -10, x1, date + periode, 'vente')
+                self.compte.add_obligation(date, actif, -10, x2, date + periode, 'achat')
+            else:
+                self.compte.do_nothing(date)
+        # On clot notre position pour ne pas etre en négatif ou pour generer un profit
+        if actif.name in self.compte.actifs:
+            if self.compte.actifs[actif.name] > 0:
+                self.compte.sell_actif(actif.name, self.compte.actifs[actif.name], actif.price, date)
+            elif self.compte.actifs[actif.name] < 0:
+                self.compte.buy_actif(actif.name, -self.compte.actifs[actif.name], actif.price, date)
         # self.compte.resolve_obligation(date)
 
-    '''
-        model = self.create_model4()  # On créé le modele
-        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5),
-                      # loss=tf.keras.losses.MeanAbsoluteError(),
-                      loss=tf.keras.losses.BinaryCrossentropy(),  # Utilisation d'une erreur en pourcentage
-                      metrics=[tf.keras.metrics.BinaryAccuracy()])  # On le compile
-
-
-        history = model.fit(X, Y,
-                            epochs=epochs,
-                            batch_size=500,
-                            verbose=1, validation_split=0.1)  # On fit nos données
-        print(history.history)
-        plt.plot(history.history['loss'])
-        plt.plot(history.history['val_loss'])
-        plt.title('training loss')
-        plt.ylabel('loss')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'val'], loc='upper left')
-        plt.show()  # On affiche le resultat de l'entrainement
-        self.model = model  # On enregistre notre modele pour l agent
-        '''
-
-    # TODO gerer le type d'option
     def plot_compte(self, plot_obligation=False):
         x = list(range(min(self.compte.historique_credit), max(self.compte.historique_credit) + 1))
-        # x = np.linspace(1, len(self.compte.historique)+1, len(self.compte.historique)+1)
         y = np.zeros_like(x)
         y1 = np.zeros_like(x)
         y2 = np.zeros_like(x)
@@ -296,7 +295,6 @@ class Agent:
             ax2.scatter(x, y2, marker='1', c=c, label='obligation')
 
         fig.tight_layout()
-        # todo faire de jolie plot, afficher ACHAT OU VENTE
         ax2.legend()
         ax1.legend()
         ax1.grid(visible=True, axis="y", linestyle='-')

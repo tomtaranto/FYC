@@ -19,14 +19,10 @@ class Marche():
     # Passer au jour suivant
     def next_day(self):
         for agent in self.agents:
-            credit = agent.compte.get_credit()
-            print("credit avant solve : ", credit)
             self.resolve_obligation(agent, self.current_time)
-            print("revenu de l operation : ", agent.compte.get_credit() - credit)
         self.current_time += 1
         for actif in self.actifs:
             actif.update_from_date(self.current_time)
-        # TODO pour chaque agent, cloturer les positions sur obligation
 
     def resolve_obligation(self, agent: Agent, current_date: int):
         # nom_actif : [quantité, prix, date execution, date achat, type]
@@ -64,10 +60,12 @@ class Marche():
                         # Si utiliser l option est interessant
                         if agent.compte.obligation[actif_name][i][1] > self.actifs[idx_actif].price:
                             if agent.compte.obligation[actif_name][i][4] == 'achat':  # J'ai achete une option de vente
-                                agent.compte.sell_actif(actif_name, -agent.compte.obligation[actif_name][i][0],
+                                print("resolution offre achat put")
+                                agent.compte.sell_actif(actif_name, abs(agent.compte.obligation[actif_name][i][0]),
                                                         agent.compte.obligation[actif_name][i][1], current_date)
                             if agent.compte.obligation[actif_name][i][4] == 'vente':  # J'ai vendu une option de vente
-                                agent.compte.buy_actif(actif_name, agent.compte.obligation[actif_name][i][0],
+                                print("resolution offre vente put")
+                                agent.compte.buy_actif(actif_name, abs(agent.compte.obligation[actif_name][i][0]),
                                                        agent.compte.obligation[actif_name][i][1],
                                                        current_date)
                         else:

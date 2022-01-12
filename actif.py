@@ -14,7 +14,7 @@ class Actif():
         self.real_data = None
         self.volatility = 0.01
         if 'shib' in name.lower():
-            self.load('shib-usd-max.csv')  # TODO mettre le nom en parametre si on a plusieurs actifs
+            self.load('shib-usd-max.csv')
         else:
             print()
             self.load('lvmh.csv')
@@ -56,7 +56,7 @@ class Actif():
         else:
             self.quantity = 505000000
             self.price = self.real_data.loc[
-                len(self.real_data.index) - self.real_data.index[date + 1], 'Close']  # TODO FIx IT EDDY !
+                len(self.real_data.index) - self.real_data.index[date + 1], 'Close']
         self.price_history[date] = self.price
         # self.volatility = np.std(list(self.price_history.values())[-50:])/self.price *np.sqrt(356)#/ self.price
         self.volatility = self.compute_volatility()
