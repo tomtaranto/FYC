@@ -109,7 +109,6 @@ class Compte():
                                                          date_achat)
         # On mutliplie le prix par la quantite d action que l on souhaite
         price = price * quantite
-        print("prix : ", price, "type : ", type)
         # Si on achete une option d achat ou de vente, on perd des sous
         if type == 'achat':
             self.change_credit(-abs(price))

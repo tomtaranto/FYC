@@ -115,17 +115,15 @@ class Agent:
     def third_strat(self, date: int, actif: Actif):
         periode = 5
         if date % periode == 0:
-            credit = self.compte.get_credit()
+
             self.compte.add_obligation(date, actif, 10, actif.price * 0.99, date + periode, 'achat')
             self.compte.add_obligation(date, actif, 10, actif.price * 1.01, date + periode, 'vente')
             # SI on veut une strategie bear
             # self.compte.add_obligation(date, actif, -10, actif.price *0.99, date + periode, 'vente')
             # self.compte.add_obligation(date, actif, -10, actif.price *1.01, date + periode, 'achat')
-            print("cout de la strategie : ", self.compte.get_credit() - credit)
         else:
             self.compte.do_nothing(date)
         if actif.name in self.compte.actifs:
-            print(f"nombre d'acitf au {date} jour : {self.compte.actifs[actif.name]}")
             if self.compte.actifs[actif.name] > 0:
                 self.compte.sell_actif(actif.name, self.compte.actifs[actif.name], actif.price, date)
             elif self.compte.actifs[actif.name] < 0:

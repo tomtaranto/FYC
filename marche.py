@@ -40,15 +40,12 @@ class Marche():
                     if agent.compte.obligation[actif_name][i][0] > 0:  # Si c'est un ordre d'achat
                         # Si utiliser l option est interessant
                         if agent.compte.obligation[actif_name][i][1] < self.actifs[idx_actif].price:
-                            print("l option est utilisee")
                             if agent.compte.obligation[actif_name][i][4] == 'achat':  # J'ai achete une option d acheter
-                                print("resolution offre achat call")
                                 agent.compte.buy_actif(actif_name, agent.compte.obligation[actif_name][i][0],
                                                        agent.compte.obligation[actif_name][i][1],
                                                        current_date)
 
                             if agent.compte.obligation[actif_name][i][4] == 'vente':  # J'ai vendu l option d'acheter
-                                print("resolution offre vente call")
                                 # On ne fait pas le check de si on peut vendre
                                 agent.compte.sell_actif(actif_name, agent.compte.obligation[actif_name][i][0],
                                                         agent.compte.obligation[actif_name][i][1], current_date)
@@ -60,11 +57,9 @@ class Marche():
                         # Si utiliser l option est interessant
                         if agent.compte.obligation[actif_name][i][1] > self.actifs[idx_actif].price:
                             if agent.compte.obligation[actif_name][i][4] == 'achat':  # J'ai achete une option de vente
-                                print("resolution offre achat put")
                                 agent.compte.sell_actif(actif_name, abs(agent.compte.obligation[actif_name][i][0]),
                                                         agent.compte.obligation[actif_name][i][1], current_date)
                             if agent.compte.obligation[actif_name][i][4] == 'vente':  # J'ai vendu une option de vente
-                                print("resolution offre vente put")
                                 agent.compte.buy_actif(actif_name, abs(agent.compte.obligation[actif_name][i][0]),
                                                        agent.compte.obligation[actif_name][i][1],
                                                        current_date)
